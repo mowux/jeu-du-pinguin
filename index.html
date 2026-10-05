@@ -1,0 +1,2722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐧 Penguin Rush</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #06131f;
+    font-family: Arial, sans-serif;
+    user-select: none;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* =========================
+   INTERFACE
+========================= */
+
+#interface {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+}
+
+#topBar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.box {
+    padding: 12px 18px;
+
+    background: rgba(5, 25, 40, .75);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 15px;
+
+    color: white;
+
+    backdrop-filter: blur(10px);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.25);
+}
+
+.label {
+    font-size: 11px;
+    color: #9bb9c8;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.value {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#stats {
+    display: flex;
+    gap: 10px;
+}
+
+/* BOOST */
+
+#boostContainer {
+    position: absolute;
+
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 280px;
+}
+
+#boostText {
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+#boostBar {
+    height: 12px;
+
+    background: rgba(255,255,255,.15);
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(255,255,255,.2);
+}
+
+#boostFill {
+    width: 100%;
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #21d4fd,
+        #4facfe
+    );
+
+    border-radius: 20px;
+
+    transition: width .1s;
+}
+
+/* PAUSE */
+
+#pause {
+    position: absolute;
+
+    right: 20px;
+    bottom: 20px;
+
+    padding: 10px 15px;
+
+    background: rgba(5,25,40,.8);
+
+    color: white;
+
+    border: 1px solid rgba(255,255,255,.2);
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    pointer-events: auto;
+}
+
+/* =========================
+   MENU
+========================= */
+
+.screen {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(23,128,170,.25),
+            rgba(2,10,17,.9)
+        );
+
+    z-index: 10;
+}
+
+.card {
+    width: min(550px, 90%);
+
+    padding: 45px;
+
+    text-align: center;
+
+    background: rgba(4,23,37,.9);
+
+    border: 1px solid rgba(150,230,255,.2);
+
+    border-radius: 30px;
+
+    box-shadow:
+        0 30px 100px rgba(0,0,0,.6);
+
+    backdrop-filter: blur(15px);
+
+    color: white;
+}
+
+.logo {
+    font-size: 80px;
+}
+
+h1 {
+    font-size: clamp(45px, 9vw, 80px);
+
+    line-height: .9;
+
+    margin: 15px 0;
+
+    background: linear-gradient(
+        #ffffff,
+        #6de4ff
+    );
+
+    color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    color: #a9c8d7;
+    margin-bottom: 30px;
+}
+
+button {
+    padding: 15px 30px;
+
+    border: none;
+
+    border-radius: 15px;
+
+    background: linear-gradient(
+        135deg,
+        #b7f5ff,
+        #36cfff
+    );
+
+    color: #05202d;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: .2s;
+
+    box-shadow:
+        0 10px 30px rgba(30,200,255,.25);
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.controls {
+    margin: 25px 0;
+
+    color: #9db8c5;
+}
+
+.key {
+    display: inline-block;
+
+    padding: 7px 12px;
+
+    margin: 3px;
+
+    border-radius: 8px;
+
+    background: #12364a;
+
+    border: 1px solid #28556b;
+
+    color: white;
+
+    font-weight: bold;
+}
+
+.hidden {
+    display: none;
+}
+
+/* MOBILE */
+
+#mobileControls {
+    display: none;
+
+    position: absolute;
+
+    bottom: 25px;
+
+    left: 20px;
+    right: 20px;
+
+    justify-content: space-between;
+
+    pointer-events: none;
+}
+
+.mobileButton {
+    width: 75px;
+    height: 75px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(5,25,40,.65);
+
+    border: 1px solid rgba(255,255,255,.2);
+
+    color: white;
+
+    font-size: 30px;
+
+    pointer-events: auto;
+}
+
+@media(max-width:800px) {
+
+    #mobileControls {
+        display: flex;
+    }
+
+    #stats .box:nth-child(2) {
+        display: none;
+    }
+
+    #boostContainer {
+        bottom: 115px;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="interface">
+
+    <div id="topBar">
+
+        <div class="box">
+
+            <div class="label">
+                Score
+            </div>
+
+            <div class="value">
+                <span id="score">0</span>
+            </div>
+
+        </div>
+
+        <div id="stats">
+
+            <div class="box">
+
+                <div class="label">
+                    Distance
+                </div>
+
+                <div class="value">
+                    <span id="distance">0</span> m
+                </div>
+
+            </div>
+
+            <div class="box">
+
+                <div class="label">
+                    Record
+                </div>
+
+                <div class="value">
+                    <span id="record">0</span>
+                </div>
+
+            </div>
+
+            <div class="box">
+
+                <div class="label">
+                    Vies
+                </div>
+
+                <div class="value">
+                    <span id="lives">❤️❤️❤️</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="boostContainer">
+
+        <div id="boostText">
+            ⚡ BOOST — ESPACE
+        </div>
+
+        <div id="boostBar">
+            <div id="boostFill"></div>
+        </div>
+
+    </div>
+
+    <button id="pause">
+        ⏸ Pause
+    </button>
+
+    <div id="mobileControls">
+
+        <div
+            class="mobileButton"
+            id="left">
+            ◀
+        </div>
+
+        <div
+            class="mobileButton"
+            id="right">
+            ▶
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- MENU PRINCIPAL -->
+
+<div
+    id="menu"
+    class="screen">
+
+    <div class="card">
+
+        <div class="logo">
+            🐧
+        </div>
+
+        <h1>
+            PENGUIN<br>
+            RUSH
+        </h1>
+
+        <div class="subtitle">
+            ICE SLIDE EDITION
+        </div>
+
+        <div class="controls">
+
+            <span class="key">←</span>
+            <span class="key">→</span>
+
+            pour diriger le pingouin
+
+            <br><br>
+
+            <span class="key">ESPACE</span>
+
+            pour utiliser le BOOST
+
+        </div>
+
+        <button id="play">
+            JOUER ❄️
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- GAME OVER -->
+
+<div
+    id="gameOver"
+    class="screen hidden">
+
+    <div class="card">
+
+        <div style="font-size:70px">
+            💥🐧
+        </div>
+
+        <h1 style="font-size:55px">
+            GAME OVER
+        </h1>
+
+        <p>
+            Ton score
+        </p>
+
+        <div
+            id="finalScore"
+            style="
+            font-size:50px;
+            font-weight:bold;
+            margin:10px;">
+            0
+        </div>
+
+        <p>
+            Record : <b id="finalRecord">0</b>
+        </p>
+
+        <br>
+
+        <button id="restart">
+            REJOUER 🔄
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CANVAS
+===================================================== */
+
+const canvas =
+    document.getElementById("game");
+
+const ctx =
+    canvas.getContext("2d");
+
+let W;
+let H;
+let DPR;
+
+function resize() {
+
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    DPR = Math.min(
+        window.devicePixelRatio || 1,
+        2
+    );
+
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+
+    ctx.setTransform(
+        DPR,
+        0,
+        0,
+        DPR,
+        0,
+        0
+    );
+}
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+resize();
+
+
+/* =====================================================
+   ELEMENTS UI
+===================================================== */
+
+const scoreText =
+    document.getElementById("score");
+
+const distanceText =
+    document.getElementById("distance");
+
+const recordText =
+    document.getElementById("record");
+
+const livesText =
+    document.getElementById("lives");
+
+const boostFill =
+    document.getElementById("boostFill");
+
+const menu =
+    document.getElementById("menu");
+
+const gameOver =
+    document.getElementById("gameOver");
+
+const finalScore =
+    document.getElementById("finalScore");
+
+const finalRecord =
+    document.getElementById("finalRecord");
+
+
+/* =====================================================
+   VARIABLES
+===================================================== */
+
+let gameRunning = false;
+
+let paused = false;
+
+let lastTime = 0;
+
+let gameTime = 0;
+
+let score = 0;
+
+let distance = 0;
+
+let lives = 3;
+
+let speed = 360;
+
+let boost = 100;
+
+let usingBoost = false;
+
+let shake = 0;
+
+let flash = 0;
+
+let spawnTimer = 0;
+
+let fishTimer = 0;
+
+let iceTimer = 0;
+
+
+/* =====================================================
+   RECORD
+===================================================== */
+
+let record =
+    Number(
+        localStorage.getItem(
+            "penguinRushRecord"
+        ) || 0
+    );
+
+recordText.textContent = record;
+
+
+/* =====================================================
+   CONTROLES
+===================================================== */
+
+const keys = {
+    left:false,
+    right:false
+};
+
+window.addEventListener(
+    "keydown",
+    e => {
+
+        if(
+            e.key === "ArrowLeft" ||
+            e.key === "a" ||
+            e.key === "A"
+        ) {
+
+            keys.left = true;
+
+        }
+
+        if(
+            e.key === "ArrowRight" ||
+            e.key === "d" ||
+            e.key === "D"
+        ) {
+
+            keys.right = true;
+
+        }
+
+        if(e.code === "Space") {
+
+            e.preventDefault();
+
+            usingBoost = true;
+
+        }
+
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    e => {
+
+        if(
+            e.key === "ArrowLeft" ||
+            e.key === "a" ||
+            e.key === "A"
+        ) {
+
+            keys.left = false;
+
+        }
+
+        if(
+            e.key === "ArrowRight" ||
+            e.key === "d" ||
+            e.key === "D"
+        ) {
+
+            keys.right = false;
+
+        }
+
+        if(e.code === "Space") {
+
+            usingBoost = false;
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   TOUCH
+===================================================== */
+
+function touchButton(
+    element,
+    key
+) {
+
+    element.addEventListener(
+        "pointerdown",
+        e => {
+
+            e.preventDefault();
+
+            keys[key] = true;
+
+        }
+    );
+
+    element.addEventListener(
+        "pointerup",
+        e => {
+
+            e.preventDefault();
+
+            keys[key] = false;
+
+        }
+    );
+
+    element.addEventListener(
+        "pointercancel",
+        () => {
+
+            keys[key] = false;
+
+        }
+    );
+
+}
+
+touchButton(
+    document.getElementById("left"),
+    "left"
+);
+
+touchButton(
+    document.getElementById("right"),
+    "right"
+);
+
+
+/* =====================================================
+   PLAYER
+===================================================== */
+
+const player = {
+
+    x: W / 2,
+
+    y: H * .73,
+
+    vx: 0,
+
+    width: 48,
+
+    height: 70,
+
+    rotation: 0,
+
+    invincible: 0
+
+};
+
+
+/* =====================================================
+   OBJETS
+===================================================== */
+
+let obstacles = [];
+
+let fish = [];
+
+let particles = [];
+
+let snow = [];
+
+
+/* =====================================================
+   UTILITAIRES
+===================================================== */
+
+function random(
+    min,
+    max
+) {
+
+    return min +
+        Math.random() *
+        (max - min);
+
+}
+
+
+function laneX(lane) {
+
+    return W * .5 +
+        (lane - 1) *
+        Math.min(
+            W * .22,
+            170
+        );
+
+}
+
+
+function distanceToPlayer(
+    a,
+    b
+) {
+
+    return Math.sqrt(
+        (a.x-b.x)**2 +
+        (a.y-b.y)**2
+    );
+
+}
+
+
+/* =====================================================
+   PARTICULES
+===================================================== */
+
+function particleBurst(
+    x,
+    y,
+    amount,
+    type="ice"
+) {
+
+    for(
+        let i=0;
+        i<amount;
+        i++
+    ) {
+
+        particles.push({
+
+            x:x,
+
+            y:y,
+
+            vx:random(
+                -220,
+                220
+            ),
+
+            vy:random(
+                -300,
+                100
+            ),
+
+            size:random(
+                2,
+                7
+            ),
+
+            life:random(
+                .4,
+                1
+            ),
+
+            type:type
+
+        });
+
+    }
+
+}
+
+
+/* =====================================================
+   NEIGE
+===================================================== */
+
+function createSnow() {
+
+    snow = [];
+
+    for(
+        let i=0;
+        i<150;
+        i++
+    ) {
+
+        snow.push({
+
+            x:Math.random()*W,
+
+            y:Math.random()*H,
+
+            radius:random(
+                1,
+                4
+            ),
+
+            speed:random(
+                20,
+                70
+            ),
+
+            alpha:random(
+                .2,
+                .8
+            )
+
+        });
+
+    }
+
+}
+
+createSnow();
+
+
+/* =====================================================
+   OBSTACLES
+===================================================== */
+
+function createObstacle() {
+
+    const lane =
+        Math.floor(
+            Math.random()*3
+        );
+
+    obstacles.push({
+
+        x:laneX(lane),
+
+        y:-80,
+
+        width:random(
+            45,
+            65
+        ),
+
+        height:random(
+            35,
+            60
+        ),
+
+        rotation:random(
+            0,
+            Math.PI*2
+        ),
+
+        speed:random(
+            -.7,
+            .7
+        ),
+
+        destroyed:false
+
+    });
+
+}
+
+
+/* =====================================================
+   POISSON
+===================================================== */
+
+function createFish() {
+
+    const lane =
+        Math.floor(
+            Math.random()*3
+        );
+
+    fish.push({
+
+        x:laneX(lane),
+
+        y:-50,
+
+        radius:16,
+
+        animation:random(
+            0,
+            Math.PI*2
+        )
+
+    });
+
+}
+
+
+/* =====================================================
+   DESSIN DU CIEL
+===================================================== */
+
+function drawSky() {
+
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            H
+        );
+
+    gradient.addColorStop(
+        0,
+        "#061727"
+    );
+
+    gradient.addColorStop(
+        .5,
+        "#0c4662"
+    );
+
+    gradient.addColorStop(
+        1,
+        "#8cdff2"
+    );
+
+    ctx.fillStyle =
+        gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+}
+
+
+/* =====================================================
+   LUNE
+===================================================== */
+
+function drawMoon() {
+
+    ctx.save();
+
+    ctx.globalAlpha = .85;
+
+    ctx.fillStyle =
+        "#eaffff";
+
+    ctx.shadowBlur = 40;
+
+    ctx.shadowColor =
+        "#a7f1ff";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        W*.78,
+        H*.17,
+        42,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   MONTAGNES
+===================================================== */
+
+function drawMountains() {
+
+    ctx.fillStyle =
+        "#0a2638";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        0,
+        H*.55
+    );
+
+    for(
+        let x=0;
+        x<=W;
+        x+=80
+    ) {
+
+        const y =
+            H*.35 +
+            Math.sin(
+                x*.012
+            )*35;
+
+        ctx.lineTo(
+            x,
+            y
+        );
+
+    }
+
+    ctx.lineTo(
+        W,
+        H
+    );
+
+    ctx.lineTo(
+        0,
+        H
+    );
+
+    ctx.fill();
+
+}
+
+
+/* =====================================================
+   PISTE
+===================================================== */
+
+function drawTrack() {
+
+    const left =
+        W*.18;
+
+    const right =
+        W*.82;
+
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            H
+        );
+
+    gradient.addColorStop(
+        0,
+        "#d9fbff"
+    );
+
+    gradient.addColorStop(
+        .5,
+        "#83d8eb"
+    );
+
+    gradient.addColorStop(
+        1,
+        "#439bb9"
+    );
+
+    ctx.fillStyle =
+        gradient;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        left,
+        H
+    );
+
+    ctx.lineTo(
+        W*.34,
+        0
+    );
+
+    ctx.lineTo(
+        W*.66,
+        0
+    );
+
+    ctx.lineTo(
+        right,
+        H
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* BORDS */
+
+    ctx.fillStyle =
+        "#f3fdff";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        0,
+        H
+    );
+
+    ctx.lineTo(
+        left,
+        H
+    );
+
+    ctx.lineTo(
+        W*.34,
+        0
+    );
+
+    ctx.lineTo(
+        W*.27,
+        0
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        W,
+        H
+    );
+
+    ctx.lineTo(
+        right,
+        H
+    );
+
+    ctx.lineTo(
+        W*.66,
+        0
+    );
+
+    ctx.lineTo(
+        W*.73,
+        0
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* LIGNES */
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.35)";
+
+    ctx.lineWidth = 2;
+
+    ctx.setLineDash([
+        25,
+        30
+    ]);
+
+    for(
+        let i=1;
+        i<3;
+        i++
+    ) {
+
+        const bottom =
+            W*.18 +
+            i*(W*.64/3);
+
+        const top =
+            W*.34 +
+            i*(W*.32/3);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            top,
+            0
+        );
+
+        ctx.lineTo(
+            bottom,
+            H
+        );
+
+        ctx.stroke();
+
+    }
+
+    ctx.setLineDash([]);
+
+}
+
+
+/* =====================================================
+   GLACE
+===================================================== */
+
+function drawIceDetails() {
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.35)";
+
+    ctx.lineWidth = 2;
+
+    for(
+        let i=0;
+        i<10;
+        i++
+    ) {
+
+        let y =
+            (i*150 +
+            gameTime*speed*.7)
+            % (H+150);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            W*.25,
+            y
+        );
+
+        ctx.lineTo(
+            W*.75,
+            y+random(-8,8)
+        );
+
+        ctx.stroke();
+
+    }
+
+}
+
+
+/* =====================================================
+   PINGOUIN
+===================================================== */
+
+function drawPenguin() {
+
+    ctx.save();
+
+    ctx.translate(
+        player.x,
+        player.y
+    );
+
+    ctx.rotate(
+        player.rotation
+    );
+
+
+    /* OMBRE */
+
+    ctx.fillStyle =
+        "rgba(0,30,50,.25)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        0,
+        38,
+        38,
+        9,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* CORPS */
+
+    const body =
+        ctx.createLinearGradient(
+            -25,
+            -35,
+            25,
+            40
+        );
+
+    body.addColorStop(
+        0,
+        "#183e55"
+    );
+
+    body.addColorStop(
+        1,
+        "#06131c"
+    );
+
+    ctx.fillStyle =
+        body;
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        0,
+        3,
+        25,
+        35,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* VENTRE */
+
+    ctx.fillStyle =
+        "#f5fcff";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        2,
+        10,
+        16,
+        25,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* TÊTE */
+
+    ctx.fillStyle =
+        "#102e43";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        -27,
+        21,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* YEUX */
+
+    ctx.fillStyle =
+        "white";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        -7,
+        -31,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.arc(
+        7,
+        -31,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle =
+        "#07121a";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        -6,
+        -30,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.arc(
+        6,
+        -30,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* BEC */
+
+    ctx.fillStyle =
+        "#ffb62b";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -7,
+        -23
+    );
+
+    ctx.lineTo(
+        7,
+        -23
+    );
+
+    ctx.lineTo(
+        0,
+        -14
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* ÉCHARPE */
+
+    ctx.fillStyle =
+        "#ff4e6a";
+
+    ctx.fillRect(
+        -19,
+        -14,
+        38,
+        7
+    );
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        8,
+        -8
+    );
+
+    ctx.lineTo(
+        20,
+        18
+    );
+
+    ctx.lineTo(
+        11,
+        14
+    );
+
+    ctx.lineTo(
+        4,
+        -8
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* AILES */
+
+    ctx.fillStyle =
+        "#0b2535";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        -27,
+        5,
+        9,
+        23,
+        -.35,
+        0,
+        Math.PI*2
+    );
+
+    ctx.ellipse(
+        27,
+        5,
+        9,
+        23,
+        .35,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* PATTES */
+
+    ctx.fillStyle =
+        "#ffac23";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        -13,
+        36,
+        15,
+        6,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.ellipse(
+        13,
+        36,
+        15,
+        6,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   ROCHER
+===================================================== */
+
+function drawObstacle(o) {
+
+    ctx.save();
+
+    ctx.translate(
+        o.x,
+        o.y
+    );
+
+    ctx.rotate(
+        o.rotation
+    );
+
+
+    ctx.fillStyle =
+        "rgba(0,40,60,.3)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        4,
+        10,
+        o.width*.65,
+        o.height*.35,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    const rock =
+        ctx.createLinearGradient(
+            -30,
+            -30,
+            30,
+            30
+        );
+
+    rock.addColorStop(
+        0,
+        "#e9fbff"
+    );
+
+    rock.addColorStop(
+        .35,
+        "#a5d1dd"
+    );
+
+    rock.addColorStop(
+        1,
+        "#416a78"
+    );
+
+    ctx.fillStyle =
+        rock;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -o.width*.55,
+        o.height*.25
+    );
+
+    ctx.lineTo(
+        -o.width*.4,
+        -o.height*.3
+    );
+
+    ctx.lineTo(
+        -o.width*.1,
+        -o.height*.55
+    );
+
+    ctx.lineTo(
+        o.width*.45,
+        -o.height*.35
+    );
+
+    ctx.lineTo(
+        o.width*.55,
+        o.height*.2
+    );
+
+    ctx.lineTo(
+        o.width*.15,
+        o.height*.5
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   POISSON
+===================================================== */
+
+function drawFish(f) {
+
+    const y =
+        f.y +
+        Math.sin(
+            gameTime*5 +
+            f.animation
+        )*5;
+
+    ctx.save();
+
+    ctx.translate(
+        f.x,
+        y
+    );
+
+    ctx.shadowBlur = 20;
+
+    ctx.shadowColor =
+        "#ffe35a";
+
+    ctx.fillStyle =
+        "#ffd34f";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        0,
+        0,
+        16,
+        10,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -13,
+        0
+    );
+
+    ctx.lineTo(
+        -27,
+        -12
+    );
+
+    ctx.lineTo(
+        -25,
+        11
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle =
+        "#173444";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        7,
+        -3,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   PARTICULES
+===================================================== */
+
+function drawParticles() {
+
+    for(
+        const p of particles
+    ) {
+
+        ctx.globalAlpha =
+            Math.max(
+                0,
+                p.life
+            );
+
+        ctx.fillStyle =
+            p.type === "gold"
+            ? "#ffe15a"
+            : "#eaffff";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            p.size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+    ctx.globalAlpha = 1;
+
+}
+
+
+/* =====================================================
+   NEIGE
+===================================================== */
+
+function drawSnow() {
+
+    for(
+        const s of snow
+    ) {
+
+        ctx.globalAlpha =
+            s.alpha;
+
+        ctx.fillStyle =
+            "white";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            s.x,
+            s.y,
+            s.radius,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+    ctx.globalAlpha = 1;
+
+}
+
+
+/* =====================================================
+   COLLISION
+===================================================== */
+
+function collision(
+    a,
+    b
+) {
+
+    return (
+        Math.abs(a.x-b.x)
+        <
+        30 + b.width/2
+
+        &&
+
+        Math.abs(a.y-b.y)
+        <
+        35 + b.height/2
+    );
+
+}
+
+
+/* =====================================================
+   UPDATE
+===================================================== */
+
+function update(dt) {
+
+    if(
+        !gameRunning ||
+        paused
+    ) return;
+
+
+    gameTime += dt;
+
+
+    /* BOOST */
+
+    let currentSpeed =
+        speed;
+
+    if(
+        usingBoost &&
+        boost > 0
+    ) {
+
+        currentSpeed *= 1.8;
+
+        boost -= 35 * dt;
+
+        particleBurst(
+            player.x,
+            player.y+35,
+            2
+        );
+
+    }
+    else {
+
+        boost += 7 * dt;
+
+    }
+
+    boost =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                boost
+            )
+        );
+
+
+    /* VITESSE */
+
+    speed +=
+        4 * dt;
+
+    speed =
+        Math.min(
+            850,
+            speed
+        );
+
+
+    /* DISTANCE */
+
+    distance +=
+        currentSpeed *
+        dt *
+        .045;
+
+
+    /* SCORE */
+
+    score +=
+        currentSpeed *
+        dt *
+        .025;
+
+
+    /* JOUEUR */
+
+    const acceleration =
+        1500;
+
+    if(keys.left) {
+
+        player.vx -=
+            acceleration *
+            dt;
+
+    }
+
+    if(keys.right) {
+
+        player.vx +=
+            acceleration *
+            dt;
+
+    }
+
+    if(
+        !keys.left &&
+        !keys.right
+    ) {
+
+        player.vx *=
+            Math.pow(
+                .03,
+                dt
+            );
+
+    }
+
+
+    player.vx =
+        Math.max(
+            -500,
+            Math.min(
+                500,
+                player.vx
+            )
+        );
+
+
+    player.x +=
+        player.vx *
+        dt;
+
+
+    /* LIMITES */
+
+    player.x =
+        Math.max(
+            W*.22,
+            Math.min(
+                W*.78,
+                player.x
+            )
+        );
+
+
+    player.rotation =
+        player.vx /
+        1800;
+
+
+    if(
+        player.invincible > 0
+    ) {
+
+        player.invincible -=
+            dt;
+
+    }
+
+
+    /* APPARITION ROCHERS */
+
+    spawnTimer -= dt;
+
+    if(
+        spawnTimer <= 0
+    ) {
+
+        createObstacle();
+
+        spawnTimer =
+            Math.max(
+                .35,
+                1.1 -
+                distance/4000
+            );
+
+    }
+
+
+    /* POISSONS */
+
+    fishTimer -= dt;
+
+    if(
+        fishTimer <= 0
+    ) {
+
+        createFish();
+
+        fishTimer =
+            random(
+                .7,
+                1.3
+            );
+
+    }
+
+
+    /* ROCHERS */
+
+    for(
+        let i=obstacles.length-1;
+        i>=0;
+        i--
+    ) {
+
+        const o =
+            obstacles[i];
+
+        o.y +=
+            currentSpeed *
+            dt;
+
+        o.rotation +=
+            o.speed *
+            dt;
+
+
+        if(
+            o.y > H+100
+        ) {
+
+            obstacles.splice(
+                i,
+                1
+            );
+
+            score += 10;
+
+            continue;
+
+        }
+
+
+        if(
+            !o.destroyed &&
+            player.invincible <= 0 &&
+            collision(
+                player,
+                o
+            )
+        ) {
+
+            o.destroyed = true;
+
+            lives--;
+
+            player.invincible =
+                1.5;
+
+            shake = 20;
+
+            flash = .35;
+
+            particleBurst(
+                player.x,
+                player.y,
+                30
+            );
+
+
+            if(
+                lives <= 0
+            ) {
+
+                endGame();
+
+                return;
+
+            }
+
+        }
+
+    }
+
+
+    /* POISSONS */
+
+    for(
+        let i=fish.length-1;
+        i>=0;
+        i--
+    ) {
+
+        const f =
+            fish[i];
+
+        f.y +=
+            currentSpeed *
+            dt;
+
+
+        if(
+            f.y > H+50
+        ) {
+
+            fish.splice(
+                i,
+                1
+            );
+
+            continue;
+
+        }
+
+
+        if(
+            Math.abs(
+                player.x-f.x
+            ) < 35 &&
+
+            Math.abs(
+                player.y-f.y
+            ) < 45
+        ) {
+
+            score += 100;
+
+            boost += 15;
+
+            particleBurst(
+                f.x,
+                f.y,
+                20,
+                "gold"
+            );
+
+            fish.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+
+    /* PARTICULES */
+
+    for(
+        let i=particles.length-1;
+        i>=0;
+        i--
+    ) {
+
+        const p =
+            particles[i];
+
+        p.life -= dt;
+
+        p.x +=
+            p.vx *
+            dt;
+
+        p.y +=
+            p.vy *
+            dt;
+
+        p.vy +=
+            500 *
+            dt;
+
+
+        if(
+            p.life <= 0
+        ) {
+
+            particles.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+
+    /* NEIGE */
+
+    for(
+        const s of snow
+    ) {
+
+        s.y +=
+            s.speed *
+            dt;
+
+        s.x +=
+            Math.sin(
+                gameTime+s.y*.01
+            ) *
+            5 *
+            dt;
+
+
+        if(
+            s.y > H
+        ) {
+
+            s.y = -10;
+
+            s.x =
+                Math.random()*W;
+
+        }
+
+    }
+
+
+    /* UI */
+
+    scoreText.textContent =
+        Math.floor(score);
+
+    distanceText.textContent =
+        Math.floor(distance);
+
+    livesText.textContent =
+        "❤️".repeat(lives) +
+        "🖤".repeat(
+            3-lives
+        );
+
+    boostFill.style.width =
+        boost + "%";
+
+
+    if(
+        flash > 0
+    ) {
+
+        flash -=
+            dt;
+
+    }
+
+}
+
+
+/* =====================================================
+   DRAW
+===================================================== */
+
+function draw() {
+
+    ctx.save();
+
+
+    if(
+        shake > 0
+    ) {
+
+        ctx.translate(
+            random(
+                -shake,
+                shake
+            ),
+            random(
+                -shake,
+                shake
+            )
+        );
+
+        shake *= .9;
+
+    }
+
+
+    drawSky();
+
+    drawMoon();
+
+    drawMountains();
+
+    drawTrack();
+
+    drawIceDetails();
+
+
+    /* POISSONS */
+
+    for(
+        const f of fish
+    ) {
+
+        drawFish(f);
+
+    }
+
+
+    /* ROCHERS */
+
+    for(
+        const o of obstacles
+    ) {
+
+        drawObstacle(o);
+
+    }
+
+
+    drawPenguin();
+
+    drawParticles();
+
+    drawSnow();
+
+
+    ctx.restore();
+
+
+    /* FLASH */
+
+    if(
+        flash > 0
+    ) {
+
+        ctx.fillStyle =
+            `rgba(255,50,70,${flash})`;
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   BOUCLE
+===================================================== */
+
+function loop(timestamp) {
+
+    const dt =
+        Math.min(
+            .033,
+            (timestamp-lastTime)/1000
+        );
+
+    lastTime =
+        timestamp;
+
+    update(dt);
+
+    draw();
+
+    requestAnimationFrame(
+        loop
+    );
+
+}
+
+requestAnimationFrame(
+    loop
+);
+
+
+/* =====================================================
+   DEMARRER
+===================================================== */
+
+function startGame() {
+
+    menu.classList.add(
+        "hidden"
+    );
+
+    gameOver.classList.add(
+        "hidden"
+    );
+
+
+    score = 0;
+
+    distance = 0;
+
+    lives = 3;
+
+    speed = 360;
+
+    boost = 100;
+
+    obstacles = [];
+
+    fish = [];
+
+    particles = [];
+
+    spawnTimer = .5;
+
+    fishTimer = 1;
+
+    player.x =
+        W/2;
+
+    player.y =
+        H*.73;
+
+    player.vx = 0;
+
+    player.invincible = 0;
+
+    gameRunning = true;
+
+    paused = false;
+
+}
+
+
+function endGame() {
+
+    gameRunning = false;
+
+
+    const final =
+        Math.floor(
+            score
+        );
+
+
+    if(
+        final > record
+    ) {
+
+        record = final;
+
+        localStorage.setItem(
+            "penguinRushRecord",
+            record
+        );
+
+    }
+
+
+    finalScore.textContent =
+        final;
+
+    finalRecord.textContent =
+        record;
+
+    recordText.textContent =
+        record;
+
+
+    gameOver.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+/* =====================================================
+   BOUTONS
+===================================================== */
+
+document
+    .getElementById("play")
+    .addEventListener(
+        "click",
+        startGame
+    );
+
+
+document
+    .getElementById("restart")
+    .addEventListener(
+        "click",
+        startGame
+    );
+
+
+document
+    .getElementById("pause")
+    .addEventListener(
+        "click",
+        () => {
+
+            if(
+                gameRunning
+            ) {
+
+                paused =
+                    !paused;
+
+                document
+                    .getElementById(
+                        "pause"
+                    )
+                    .textContent =
+                    paused
+                    ? "▶ Reprendre"
+                    : "⏸ Pause";
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   SON
+===================================================== */
+
+let audio;
+
+function sound(
+    frequency
+) {
+
+    try {
+
+        if(!audio) {
+
+            audio =
+                new AudioContext();
+
+        }
+
+        const oscillator =
+            audio.createOscillator();
+
+        const gain =
+            audio.createGain();
+
+        oscillator.frequency.value =
+            frequency;
+
+        oscillator.type =
+            "sine";
+
+        gain.gain.value =
+            .04;
+
+        oscillator.connect(
+            gain
+        );
+
+        gain.connect(
+            audio.destination
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            audio.currentTime+.1
+        );
+
+    }
+
+    catch(e) {}
+
+}
+
+
+/* =====================================================
+   INITIALISATION
+===================================================== */
+
+recordText.textContent =
+    record;
+
+</script>
+
+</body>
+</html>
